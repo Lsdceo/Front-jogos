@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 
 const InventoryManagement: React.FC = () => {
-  const { games, inventory, addStockMovement, loading, fetchInventory } = useGamesAndInventory();
+  const { games, inventory, plataformas, depositos, addStockMovement, loading, error, fetchInventory } = useGamesAndInventory();
   const { state } = useAuth();
   const [activeTab, setActiveTab] = useState<'overview' | 'movements' | 'add-movement'>('overview');
   const [movementForm, setMovementForm] = useState({
@@ -25,40 +25,59 @@ const InventoryManagement: React.FC = () => {
     depositoDestinoId: '',
   });
 
-  // Estoque baixo: você pode definir a regra, aqui exemplo para 2 ou menos.
   const lowStockItems = inventory.filter(item => item.quantidade <= 2);
 
-  // Mostra os últimos 10 registros de inventário (não movimentação detalhada)
-  // Ideal: criar um hook separado para buscar movimentações se seu backend tiver endpoint para isso!
   const recentInventory = [...inventory].sort((a, b) => b.id - a.id).slice(0, 10);
 
   const handleAddMovement = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!movementForm.jogoId || !movementForm.tipo || movementForm.quantidade < 1) return;
+    if (!movementForm.jogoId || !movementForm.tipo || movementForm.quantidade < 1 || !movementForm.plataformaId) {
+        alert('Por favor, preencha todos os campos obrigatórios (Jogo, Tipo, Quantidade, Plataforma).');
+        return;
+    }
 
-    // Ajuste conforme o DTO de movimentação do backend
-    const movement: any = {
+    if (movementForm.tipo === 'ENTRADA' && !movementForm.depositoDestinoId) {
+        alert('Para Entradas, o Depósito de Destino é obrigatório.');
+        return;
+    }
+
+     if (movementForm.tipo === 'SAIDA' && !movementForm.depositoOrigemId) {
+         alert('Para Saídas, o Depósito de Origem é obrigatório.');
+         return;
+     }
+
+
+    if (movementForm.tipo === 'TRANSFERENCIA' && (!movementForm.depositoOrigemId || !movementForm.depositoDestinoId)) {
+        alert('Para Transferências, o Depósito de Origem e o Depósito de Destino são obrigatórios.');
+        return;
+    }
+
+
+    const movement: any = { // Considere criar uma interface para StockMovementRequestDTO
       jogoId: parseInt(movementForm.jogoId),
       tipo: movementForm.tipo,
       quantidade: movementForm.quantidade,
       observacao: movementForm.observacao,
-      plataformaId: movementForm.plataformaId ? parseInt(movementForm.plataformaId) : undefined,
-      depositoOrigemId: movementForm.tipo === 'TRANSFERENCIA' && movementForm.depositoOrigemId ? parseInt(movementForm.depositoOrigemId) : undefined,
-      depositoDestinoId: movementForm.tipo === 'TRANSFERENCIA' && movementForm.depositoDestinoId ? parseInt(movementForm.depositoDestinoId) : undefined,
+      plataformaId: parseInt(movementForm.plataformaId),
+      depositoOrigemId: movementForm.depositoOrigemId ? parseInt(movementForm.depositoOrigemId) : undefined,
+      depositoDestinoId: movementForm.depositoDestinoId ? parseInt(movementForm.depositoDestinoId) : undefined,
     };
 
-    await addStockMovement(movement);
-    setMovementForm({
-      jogoId: '',
-      tipo: 'ENTRADA',
-      quantidade: 1,
-      observacao: '',
-      plataformaId: '',
-      depositoOrigemId: '',
-      depositoDestinoId: '',
-    });
-    setActiveTab('overview');
-    fetchInventory();
+    try {
+      await addStockMovement(movement);
+       setMovementForm({
+         jogoId: '',
+         tipo: 'ENTRADA',
+         quantidade: 1,
+         observacao: '',
+         plataformaId: '',
+         depositoOrigemId: '',
+         depositoDestinoId: '',
+       });
+       setActiveTab('overview');
+    } catch (submitError) {
+        console.error('Erro ao adicionar movimentação no componente:', submitError);
+    }
   };
 
   const getMovementIcon = (tipo: string) => {
@@ -92,6 +111,16 @@ const InventoryManagement: React.FC = () => {
       </div>
     );
   }
+
+   if (error) {
+       return (
+           <div className="text-center py-8 text-red-600">
+               <p className="font-semibold">Ocorreu um erro ao carregar os dados:</p>
+               <p>{error}</p>
+           </div>
+       );
+   }
+
 
   return (
     <div className="space-y-6">
@@ -209,23 +238,24 @@ const InventoryManagement: React.FC = () => {
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
                                 <div className="h-8 w-8 rounded object-cover bg-gray-200 flex items-center justify-center text-gray-400 font-bold">
-                                  {item.jogoTitulo.charAt(0)}
+                                  {/* CORREÇÃO AQUI: Verificar se item.jogoTitulo existe antes de chamar charAt(0) */}
+                                  {item.jogoTitulo ? item.jogoTitulo.charAt(0) : '?'}
                                 </div>
                                 <div className="ml-3">
-                                  <p className="text-sm font-medium text-gray-900">{item.jogoTitulo}</p>
+                                  <p className="text-sm font-medium text-gray-900">{item.jogoTitulo || 'N/A'}</p>
                                 </div>
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.plataformaNome}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.plataformaNome || 'N/A'}</td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <span className={`text-sm font-medium ${item.quantidade <= 2 ? 'text-amber-600' : 'text-gray-900'}`}>
                                 {item.quantidade}
                               </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              R$ {item.precoUnitarioAtual.toFixed(2)}
+                              R$ {item.precoUnitarioAtual?.toFixed(2) || 'N/A'} {/* Adicionado verificação opcional */}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.depositoNome}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.depositoNome || 'N/A'}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -247,11 +277,11 @@ const InventoryManagement: React.FC = () => {
                         <Package className="w-4 h-4 text-indigo-500" />
                         <div>
                           <p className="font-medium text-gray-900">
-                            {item.jogoTitulo}
+                            {item.jogoTitulo || 'N/A'}
                           </p>
-                          <p className="text-sm text-gray-600">{item.plataformaNome}</p>
+                          <p className="text-sm text-gray-600">{item.plataformaNome || 'N/A'}</p>
                           <p className="text-xs text-gray-500">
-                            Depósito: {item.depositoNome}
+                            Depósito: {item.depositoNome || 'N/A'}
                           </p>
                         </div>
                       </div>
@@ -260,7 +290,7 @@ const InventoryManagement: React.FC = () => {
                           Qtd: {item.quantidade}
                         </p>
                         <p className="text-xs text-gray-500">
-                          R$ {item.precoUnitarioAtual.toFixed(2)}
+                          R$ {item.precoUnitarioAtual?.toFixed(2) || 'N/A'}
                         </p>
                       </div>
                     </div>
@@ -281,8 +311,9 @@ const InventoryManagement: React.FC = () => {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Adicionar Movimentação de Estoque</h3>
               <form onSubmit={handleAddMovement} className="space-y-4 max-w-md">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Jogo</label>
+                  <label htmlFor="jogoId" className="block text-sm font-medium text-gray-700 mb-2">Jogo</label>
                   <select
+                    id="jogoId"
                     value={movementForm.jogoId}
                     onChange={(e) => setMovementForm(prev => ({ ...prev, jogoId: e.target.value }))}
                     required
@@ -298,8 +329,29 @@ const InventoryManagement: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Movimentação</label>
+                  <label htmlFor="plataformaId" className="block text-sm font-medium text-gray-700 mb-2">Plataforma</label>
+                   <select
+                    id="plataformaId"
+                    value={movementForm.plataformaId}
+                    onChange={(e) => setMovementForm(prev => ({ ...prev, plataformaId: e.target.value }))}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  >
+                    <option value="">Selecione uma plataforma</option>
+                     {/* Usando a lista de plataformas carregada pelo hook */}
+                     {plataformas.map((plataforma) => (
+                         <option key={plataforma.id} value={plataforma.id}>
+                            {plataforma.nome}
+                         </option>
+                     ))}
+                  </select>
+                </div>
+
+
+                <div>
+                  <label htmlFor="tipo" className="block text-sm font-medium text-gray-700 mb-2">Tipo de Movimentação</label>
                   <select
+                    id="tipo"
                     value={movementForm.tipo}
                     onChange={(e) => setMovementForm(prev => ({ ...prev, tipo: e.target.value as any }))}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
@@ -311,8 +363,9 @@ const InventoryManagement: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Quantidade</label>
+                  <label htmlFor="quantidade" className="block text-sm font-medium text-gray-700 mb-2">Quantidade</label>
                   <input
+                    id="quantidade"
                     type="number"
                     min="1"
                     value={movementForm.quantidade}
@@ -323,8 +376,9 @@ const InventoryManagement: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Observação</label>
+                  <label htmlFor="observacao" className="block text-sm font-medium text-gray-700 mb-2">Observação</label>
                   <input
+                    id="observacao"
                     type="text"
                     value={movementForm.observacao}
                     onChange={(e) => setMovementForm(prev => ({ ...prev, observacao: e.target.value }))}
@@ -334,31 +388,47 @@ const InventoryManagement: React.FC = () => {
                   />
                 </div>
 
-                {/* Se quiser capturar plataforma ou depósitos, adicione selects/inputs aqui */}
-                {movementForm.tipo === 'TRANSFERENCIA' && (
-                  <>
+                {/* Campos de Depósito Condicionais */}
+                 {(movementForm.tipo === 'SAIDA' || movementForm.tipo === 'TRANSFERENCIA') && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Depósito de Origem</label>
-                      <input
-                        type="text"
-                        value={movementForm.depositoOrigemId}
-                        onChange={(e) => setMovementForm(prev => ({ ...prev, depositoOrigemId: e.target.value }))}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        placeholder="ID do depósito de origem"
-                      />
+                       <label htmlFor="depositoOrigemId" className="block text-sm font-medium text-gray-700 mb-2">Depósito de Origem</label>
+                       <select
+                         id="depositoOrigemId"
+                         value={movementForm.depositoOrigemId}
+                         onChange={(e) => setMovementForm(prev => ({ ...prev, depositoOrigemId: e.target.value }))}
+                         required={movementForm.tipo !== 'ENTRADA'} // Obrigatório para SAIDA e TRANSFERENCIA
+                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                       >
+                         <option value="">Selecione o depósito de origem</option>
+                         {depositos.map((deposito) => (
+                            <option key={deposito.id} value={deposito.id}>
+                               {deposito.nome}
+                            </option>
+                         ))}
+                       </select>
                     </div>
+                 )}
+
+                {(movementForm.tipo === 'ENTRADA' || movementForm.tipo === 'TRANSFERENCIA') && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Depósito de Destino</label>
-                      <input
-                        type="text"
-                        value={movementForm.depositoDestinoId}
-                        onChange={(e) => setMovementForm(prev => ({ ...prev, depositoDestinoId: e.target.value }))}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        placeholder="ID do depósito de destino"
-                      />
+                       <label htmlFor="depositoDestinoId" className="block text-sm font-medium text-gray-700 mb-2">Depósito de Destino</label>
+                       <select
+                         id="depositoDestinoId"
+                         value={movementForm.depositoDestinoId}
+                         onChange={(e) => setMovementForm(prev => ({ ...prev, depositoDestinoId: e.target.value }))}
+                         required={movementForm.tipo !== 'SAIDA'} // Obrigatório para ENTRADA e TRANSFERENCIA
+                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                       >
+                         <option value="">Selecione o depósito de destino</option>
+                         {depositos.map((deposito) => (
+                            <option key={deposito.id} value={deposito.id}>
+                               {deposito.nome}
+                            </option>
+                         ))}
+                       </select>
                     </div>
-                  </>
-                )}
+                 )}
+
 
                 <button
                   type="submit"

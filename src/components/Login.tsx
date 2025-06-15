@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Gamepad2, Eye, EyeOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom'; // Importe useNavigate
+import { useEffect } from 'react'; // Importe useEffect
 
 interface LoginProps {
   onToggleMode: () => void;
@@ -9,6 +11,8 @@ interface LoginProps {
 
 const Login: React.FC<LoginProps> = ({ onToggleMode, isRegisterMode }) => {
   const { login, register, state } = useAuth();
+  const navigate = useNavigate(); // Use o hook de navegação
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -16,26 +20,42 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegisterMode }) => {
     role: 'user' as 'admin' | 'user',
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(state.error); // Inicialize o erro com o estado do contexto
+
+   // Adicione um useEffect para observar mudanças no estado de erro do contexto
+   useEffect(() => {
+      setError(state.error);
+   }, [state.error]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError(''); // Limpa erro anterior ao submeter
 
     try {
       if (isRegisterMode) {
         const success = await register(formData.email, formData.password, formData.name, formData.role);
-        if (!success) {
-          setError('Falha no registro');
+        if (success) { // Se a chamada da API de registro foi bem-sucedida
+           // *** Redireciona para a página de login ***
+           navigate('/login'); // Ajuste o caminho '/login' conforme sua rota de login
+           onToggleMode(); // Opcional: muda para o modo login após o registro bem-sucedido
+        } else {
+            // A mensagem de erro já deve estar no estado 'state.error' pelo dispatch em AuthContext
+            // setError('Falha no registro. Verifique os dados.'); // Mensagem fallback se necessário
         }
-      } else {
+      } else { // Modo login
         const success = await login(formData.email, formData.password);
-        if (!success) {
-          setError('Credenciais inválidas');
+        if (success) {
+          // Redireciona para a página principal ou dashboard após o login
+           navigate('/'); // Ajuste o caminho '/' conforme sua página principal
+        } else {
+          // A mensagem de erro já deve estar no estado 'state.error' pelo dispatch em AuthContext
+          // setError('Credenciais inválidas'); // Mensagem fallback se necessário
         }
       }
-    } catch (err) {
-      setError('Ocorreu um erro');
+    } catch (err: any) {
+        console.error("Erro inesperado no handleSubmit:", err);
+        setError(err.message || 'Ocorreu um erro inesperado.'); // Captura erros inesperados antes da chamada da API
     }
   };
 
@@ -144,7 +164,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegisterMode }) => {
             </div>
           )}
 
-          {error && (
+          {error && ( // Exibe o error do estado local
             <div className="bg-red-50 border border-red-200 rounded-lg p-3">
               <p className="text-sm text-red-600">{error}</p>
             </div>
@@ -152,10 +172,10 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegisterMode }) => {
 
           <button
             type="submit"
-            disabled={state.isLoading}
+            disabled={state.isLoading} // Desabilita o botão se estiver carregando
             className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors disabled:opacity-50 flex items-center justify-center"
           >
-            {state.isLoading ? (
+            {state.isLoading ? ( // Mostra spinner se estiver carregando
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
             ) : (
               isRegisterMode ? 'Criar Conta' : 'Entrar'

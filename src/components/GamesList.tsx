@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useGamesAndInventory } from '../hooks/useGamesAndInventory';
 import { useAuth } from '../contexts/AuthContext';
-import GameForm from './GameForm';
-import {
+import GameForm from '../components/GameForm';
+import GameDetails from '../components/GameDetails'; // Importe o novo componente
+import { // Mantenha apenas os ícones necessários
   Search,
   Plus,
   Edit,
@@ -13,28 +14,29 @@ import {
   Gamepad2
 } from 'lucide-react';
 
-// Ajuste: Os tipos agora vêm do back, então você pode importar de ../types se quiser campos extras customizados
+// Importe a interface Game se estiver definida em ../types
 // import { Game } from '../types';
 
 const GamesList: React.FC = () => {
-  // Usar o novo hook!
   const { games, loading, deleteGame, updateGame } = useGamesAndInventory();
   const { state } = useAuth();
 
-  // Os filtros precisarão ser adaptados para os novos campos do backend!
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('');
   const [showForm, setShowForm] = useState(false);
-  const [editingGame, setEditingGame] = useState<any | null>(null); // Ajuste o tipo conforme seu novo modelo
+  const [editingGame, setEditingGame] = useState<any | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  // Filtros adaptados: agora filtra por título, gênero e desenvolvedora
+  // --- NOVO ESTADO PARA CONTROLAR A VISUALIZAÇÃO ---
+  const [viewingGame, setViewingGame] = useState<any | null>(null); // Estado para o jogo que está sendo visualizado
+
   const filteredGames = useMemo(() => {
     return games.filter(game => {
       const matchesSearch =
         game.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
         game.genero.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        game.desenvolvedora.toLowerCase().includes(searchTerm.toLowerCase());
+        game.desenvolvedora.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        game.publicadora.toLowerCase().includes(searchTerm.toLowerCase()); // Incluindo publicadora na busca
 
       const matchesGenre =
         selectedGenre === '' || game.genero === selectedGenre;
@@ -43,7 +45,6 @@ const GamesList: React.FC = () => {
     });
   }, [games, searchTerm, selectedGenre]);
 
-  // Listagem dinâmica de gêneros disponíveis
   const genres = useMemo(() => {
     const set = new Set<string>();
     games.forEach(g => set.add(g.genero));
@@ -54,6 +55,7 @@ const GamesList: React.FC = () => {
   const handleEdit = (game: any) => {
     setEditingGame(game);
     setShowForm(true);
+    setViewingGame(null); // Fecha a visualização se estiver aberta
   };
 
   // Remover jogo
@@ -63,6 +65,19 @@ const GamesList: React.FC = () => {
     }
   };
 
+  // --- FUNÇÃO handleView ATUALIZADA ---
+  const handleView = (game: any) => {
+    setViewingGame(game); // Define o jogo para ser visualizado
+    setEditingGame(null); // Garante que o formulário de edição não esteja aberto
+    setShowForm(false);   // Garante que o formulário de adição não esteja aberto
+  };
+
+  // --- FUNÇÃO PARA FECHAR A VISUALIZAÇÃO ---
+  const handleCloseView = () => {
+    setViewingGame(null); // Limpa o estado do jogo sendo visualizado
+  };
+
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -71,6 +86,9 @@ const GamesList: React.FC = () => {
     );
   }
 
+   // --- RENDERIZAÇÃO CONDICIONAL: GameForm ou GameDetails ou a Lista ---
+
+   // Se o formulário de adição/edição estiver aberto, renderize-o
   if (showForm) {
     return (
       <GameForm
@@ -83,6 +101,17 @@ const GamesList: React.FC = () => {
     );
   }
 
+   // Se um jogo estiver sendo visualizado, renderize o componente GameDetails
+   if (viewingGame) {
+     return (
+       <GameDetails
+         game={viewingGame} // Passa os dados do jogo selecionado
+         onClose={handleCloseView} // Passa a função para fechar a visualização
+       />
+     );
+   }
+
+   // Se nenhum formulário ou visualização estiver aberto, renderize a lista de jogos
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -190,7 +219,10 @@ const GamesList: React.FC = () => {
                 </div>
 
                 <div className="flex space-x-2">
-                  <button className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center space-x-1">
+                   {/* CHAMA handleView AO CLICAR NO BOTÃO "Ver" */}
+                  <button
+                     onClick={() => handleView(game)}
+                     className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center space-x-1">
                     <Eye className="w-4 h-4" />
                     <span>Ver</span>
                   </button>
@@ -245,7 +277,10 @@ const GamesList: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">R$ {game.precoSugerido?.toFixed(2)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
-                        <button className="text-indigo-600 hover:text-indigo-900">
+                         {/* CHAMA handleView AO CLICAR NO BOTÃO "Ver" */}
+                        <button
+                           onClick={() => handleView(game)}
+                           className="text-indigo-600 hover:text-indigo-900">
                           <Eye className="w-4 h-4" />
                         </button>
                         {state.user?.role === 'admin' && (
