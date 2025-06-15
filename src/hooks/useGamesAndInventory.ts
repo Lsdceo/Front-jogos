@@ -63,7 +63,7 @@ export const useGamesAndInventory = () => {
     try {
       setError(null);
       console.log('📦 Buscando estoque do backend...');
-      const res = await api.get<InventoryItem[]>('/estoque');
+      const res = await api.get<InventoryItem[]>('/estoque/consultar');
       setInventory(res.data);
       console.log(`✅ ${res.data.length} itens de estoque carregados!`);
     } catch (err: any) {
