@@ -19,7 +19,8 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange }) => {
-  const { state, logout } = useAuth();
+  // Use the modified useAuth hook
+  const { state, logout, isAdmin } = useAuth();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   const menuItems = [
@@ -27,7 +28,8 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange }) 
     { id: 'games', label: 'Jogos', icon: Gamepad2 },
     { id: 'inventory', label: 'Inventário', icon: Package },
     { id: 'reports', label: 'Relatórios', icon: TrendingUp },
-    ...(state.user?.role === 'admin' ? [{ id: 'users', label: 'Usuários', icon: Users }] : []),
+    // Conditionally include the 'users' item based on isAdmin
+    ...(isAdmin ? [{ id: 'users', label: 'Usuários', icon: Users }] : []),
   ];
 
   const getPageTitle = (page: string) => {
@@ -120,8 +122,9 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange }) 
                 </div>
                 <div className="hidden sm:block">
                   <p className="text-sm font-medium text-gray-900">{state.user?.name}</p>
+                  {/* Display the actual role from the user object */}
                   <p className="text-xs text-gray-500 capitalize">
-                    {state.user?.role === 'admin' ? 'Administrador' : 'Usuário'}
+                     {isAdmin ? 'Administrador' : 'Usuário'}
                   </p>
                 </div>
               </div>

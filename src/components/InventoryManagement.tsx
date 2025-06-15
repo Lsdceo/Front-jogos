@@ -13,11 +13,12 @@ import {
 
 const InventoryManagement: React.FC = () => {
   const { games, inventory, plataformas, depositos, addStockMovement, loading, error, fetchInventory } = useGamesAndInventory();
-  const { state } = useAuth();
+  const { isAdmin } = useAuth();
+
   const [activeTab, setActiveTab] = useState<'overview' | 'movements' | 'add-movement'>('overview');
   const [movementForm, setMovementForm] = useState({
     jogoId: '',
-    tipo: 'ENTRADA' as 'ENTRADA' | 'SAIDA' | 'TRANSFERENCIA',
+    tipo: 'ENTRADA' as 'ENTRADA' | 'SAIDA' | 'TRANSFERENCIA', // Tipos de movimentação do frontend
     quantidade: 1,
     observacao: '',
     plataformaId: '',
@@ -31,40 +32,84 @@ const InventoryManagement: React.FC = () => {
 
   const handleAddMovement = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Validações básicas dos campos comuns a todas as movimentações
     if (!movementForm.jogoId || !movementForm.tipo || movementForm.quantidade < 1 || !movementForm.plataformaId) {
-        alert('Por favor, preencha todos os campos obrigatórios (Jogo, Tipo, Quantidade, Plataforma).');
+        alert('Por favor, preencha os campos obrigatórios: Jogo, Tipo, Quantidade e Plataforma.');
         return;
     }
 
-    if (movementForm.tipo === 'ENTRADA' && !movementForm.depositoDestinoId) {
-        alert('Para Entradas, o Depósito de Destino é obrigatório.');
-        return;
-    }
+    // Converte IDs e quantidade para números inteiros
+    const jogoIdInt = parseInt(movementForm.jogoId);
+    const plataformaIdInt = parseInt(movementForm.plataformaId);
+    const quantidadeInt = parseInt(movementForm.quantidade as any);
 
-     if (movementForm.tipo === 'SAIDA' && !movementForm.depositoOrigemId) {
-         alert('Para Saídas, o Depósito de Origem é obrigatório.');
-         return;
-     }
-
-
-    if (movementForm.tipo === 'TRANSFERENCIA' && (!movementForm.depositoOrigemId || !movementForm.depositoDestinoId)) {
-        alert('Para Transferências, o Depósito de Origem e o Depósito de Destino são obrigatórios.');
-        return;
-    }
-
-
-    const movement: any = { // Considere criar uma interface para StockMovementRequestDTO
-      jogoId: parseInt(movementForm.jogoId),
-      tipo: movementForm.tipo,
-      quantidade: movementForm.quantidade,
-      observacao: movementForm.observacao,
-      plataformaId: parseInt(movementForm.plataformaId),
-      depositoOrigemId: movementForm.depositoOrigemId ? parseInt(movementForm.depositoOrigemId) : undefined,
-      depositoDestinoId: movementForm.depositoDestinoId ? parseInt(movementForm.depositoDestinoId) : undefined,
-    };
+    // Converte IDs de depósito para números inteiros ou undefined
+    const depositoOrigemIdInt = movementForm.depositoOrigemId ? parseInt(movementForm.depositoOrigemId) : undefined;
+    const depositoDestinoIdInt = movementForm.depositoDestinoId ? parseInt(movementForm.depositoDestinoId) : undefined;
 
     try {
-      await addStockMovement(movement);
+        if (movementForm.tipo === 'TRANSFERENCIA') {
+            // Lógica específica para Transferência (chama endpoint /transferir)
+            if (!depositoOrigemIdInt || !depositoDestinoIdInt) {
+                alert('Para Transferências, o Depósito de Origem e o Depósito de Destino são obrigatórios.');
+                return;
+            }
+
+             // Prepara o objeto para o endpoint /estoque/transferir
+             // Adapte os nomes dos campos abaixo para corresponderem EXATAMENTE
+             // ao DTO que o seu endpoint /estoque/transferir espera.
+             const transferRequest = {
+                 jogoId: jogoIdInt,
+                 plataformaId: plataformaIdInt,
+                 depositoOrigemId: depositoOrigemIdInt,
+                 depositoDestinoId: depositoDestinoIdInt,
+                 quantidade: quantidadeInt,
+                 observacao: movementForm.observacao, // Se o endpoint de transferência aceitar observação
+             };
+
+            console.log('📋 Adicionando movimentação de TRANSFERENCIA:', transferRequest);
+            // Chame o endpoint de transferência
+            // Assumindo que addStockMovement no hook lida com a chamada api.post e tratamento base
+             await addStockMovement(transferRequest, 'TRANSFERENCIA'); // Passa o tipo para o hook se ele precisar diferenciar endpoints
+
+            console.log('✅ Movimentação de TRANSFERENCIA adicionada com sucesso!');
+
+        } else {
+            // Lógica para Entrada ou Saída (chama endpoint /movimentar)
+
+            // Validação específica para Entrada/Saída
+             if (movementForm.tipo === 'ENTRADA' && !depositoDestinoIdInt) {
+                 alert('Para Entradas, o Depósito de Destino é obrigatório.');
+                 return;
+             }
+             if (movementForm.tipo === 'SAIDA' && !depositoOrigemIdInt) {
+                  alert('Para Saídas, o Depósito de Origem é obrigatório.');
+                  return;
+             }
+
+             // Prepara o objeto para o endpoint /estoque/movimentar
+             // Adapte os nomes dos campos abaixo para corresponderem EXATAMENTE
+             // ao DTO que o seu endpoint /estoque/movimentar espera.
+             const movementRequest = {
+                 // Adapte o nome do campo 'tipo' se for diferente no backend (ex: 'tipoMovimentacao')
+                 tipo: movementForm.tipo, // ENTRADA ou SAIDA - Estes nomes parecem corresponder aos seus enums de backend
+                 jogoId: jogoIdInt,
+                 plataformaId: plataformaIdInt,
+                 quantidade: quantidadeInt,
+                 observacao: movementForm.observacao,
+                 // Inclua depósito de origem ou destino apenas se aplicável
+                 ...(movementForm.tipo === 'SAIDA' && { depositoOrigemId: depositoOrigemIdInt }),
+                 ...(movementForm.tipo === 'ENTRADA' && { depositoDestinoId: depositoDestinoIdInt }),
+             };
+
+            console.log('📋 Adicionando movimentação de ESTOQUE (ENTRADA/SAIDA):', movementRequest);
+            // Chame o endpoint de movimentar
+             await addStockMovement(movementRequest, 'ENTRADA_SAIDA'); // Passa um indicador para o hook
+
+            console.log('✅ Movimentação de ESTOQUE (ENTRADA/SAIDA) adicionada com sucesso!');
+        }
+
+       // Limpa o formulário e volta para a visão geral após sucesso
        setMovementForm({
          jogoId: '',
          tipo: 'ENTRADA',
@@ -74,11 +119,23 @@ const InventoryManagement: React.FC = () => {
          depositoOrigemId: '',
          depositoDestinoId: '',
        });
-       setActiveTab('overview');
-    } catch (submitError) {
-        console.error('Erro ao adicionar movimentação no componente:', submitError);
+       setActiveTab('overview'); // Volta para a aba de visão geral
+
+       // Recarrega o estoque após a movimentação (importante para ver o resultado)
+       await fetchInventory();
+
+    } catch (submitError: any) { // Capture o erro para exibir a mensagem do backend
+        console.error('❌ Erro ao adicionar movimentação no componente:', submitError);
+        // O hook useGamesAndInventory já trata o erro e exibe um alerta/define o estado de erro.
+        // Você pode adicionar lógica extra aqui se precisar.
+        // const errorMessage = submitError.response?.data?.message || 'Erro ao adicionar movimentação de estoque.';
+        // setError(errorMessage); // Define o estado de erro para exibir no frontend (se não for tratado no hook)
     }
   };
+
+
+  // CORREÇÃO: Certificar que a lista de jogos, plataformas e depósitos está carregada antes de renderizar o formulário
+  // Isso é tratado pelo estado `loading` do hook `useGamesAndInventory`.
 
   const getMovementIcon = (tipo: string) => {
     switch (tipo) {
@@ -98,12 +155,16 @@ const InventoryManagement: React.FC = () => {
     }
   };
 
+  // Inclui condicionalmente a aba 'add-movement' se o usuário for admin
   const tabs = [
     { id: 'overview', label: 'Visão Geral', icon: Package },
-    { id: 'movements', label: 'Itens Recentes no Estoque', icon: TrendingUp },
-    ...(state.user?.role === 'admin' ? [{ id: 'add-movement', label: 'Adicionar Movimentação', icon: Plus }] : []),
+    // Você pode adicionar uma aba para "Histórico de Movimentações" aqui, se tiver um endpoint para isso
+    // { id: 'history', label: 'Histórico de Movimentações', icon: Calendar },
+    { id: 'movements', label: 'Itens Recentes no Estoque', icon: TrendingUp }, // Mantido esta aba para mostrar itens recentes
+    ...(isAdmin ? [{ id: 'add-movement', label: 'Adicionar Movimentação', icon: Plus }] : []),
   ];
 
+  // Exibe loading state
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -112,6 +173,7 @@ const InventoryManagement: React.FC = () => {
     );
   }
 
+   // Exibe erro se houver
    if (error) {
        return (
            <div className="text-center py-8 text-red-600">
@@ -238,8 +300,8 @@ const InventoryManagement: React.FC = () => {
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
                                 <div className="h-8 w-8 rounded object-cover bg-gray-200 flex items-center justify-center text-gray-400 font-bold">
-                                  {/* CORREÇÃO AQUI: Verificar se item.jogoTitulo existe antes de chamar charAt(0) */}
-                                  {item.jogoTitulo ? item.jogoTitulo.charAt(0) : '?'}
+                                   {/* CORREÇÃO AQUI: Verificar se item.jogoTitulo existe antes de chamar charAt(0) */}
+                                   {item.jogoTitulo ? item.jogoTitulo.charAt(0) : '?'}
                                 </div>
                                 <div className="ml-3">
                                   <p className="text-sm font-medium text-gray-900">{item.jogoTitulo || 'N/A'}</p>
@@ -306,7 +368,8 @@ const InventoryManagement: React.FC = () => {
             </div>
           )}
 
-          {activeTab === 'add-movement' && state.user?.role === 'admin' && (
+           {/* Renderiza o conteúdo da aba "Adicionar Movimentação" apenas se o usuário for ADMIN */}
+          {activeTab === 'add-movement' && isAdmin && (
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Adicionar Movimentação de Estoque</h3>
               <form onSubmit={handleAddMovement} className="space-y-4 max-w-md">
@@ -320,6 +383,7 @@ const InventoryManagement: React.FC = () => {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   >
                     <option value="">Selecione um jogo</option>
+                    {/* Mapeia a lista de jogos carregada pelo hook */}
                     {games.map((game) => (
                       <option key={game.id} value={game.id}>
                         {game.titulo}
@@ -338,7 +402,7 @@ const InventoryManagement: React.FC = () => {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   >
                     <option value="">Selecione uma plataforma</option>
-                     {/* Usando a lista de plataformas carregada pelo hook */}
+                     {/* Mapeia a lista de plataformas carregada pelo hook */}
                      {plataformas.map((plataforma) => (
                          <option key={plataforma.id} value={plataforma.id}>
                             {plataforma.nome}
@@ -353,12 +417,22 @@ const InventoryManagement: React.FC = () => {
                   <select
                     id="tipo"
                     value={movementForm.tipo}
-                    onChange={(e) => setMovementForm(prev => ({ ...prev, tipo: e.target.value as any }))}
+                    // Ao mudar o tipo, limpa os campos de depósito para evitar erros
+                    onChange={(e) => setMovementForm(prev => ({
+                         ...prev,
+                         tipo: e.target.value as any,
+                         depositoOrigemId: '', // Limpa origem
+                         depositoDestinoId: '' // Limpa destino
+                    }))}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   >
+                    {/* Ajustado os valores para corresponderem aos nomes dos tipos no frontend */}
                     <option value="ENTRADA">Entrada de Estoque</option>
                     <option value="SAIDA">Saída de Estoque</option>
                     <option value="TRANSFERENCIA">Transferência</option>
+                    {/* Se tiver AJUSTE_POSITIVO e AJUSTE_NEGATIVO e quiser exibir: */}
+                    {/* <option value="AJUSTE_POSITIVO">Ajuste Positivo</option> */}
+                    {/* <option value="AJUSTE_NEGATIVO">Ajuste Negativo</option> */}
                   </select>
                 </div>
 
@@ -375,20 +449,8 @@ const InventoryManagement: React.FC = () => {
                   />
                 </div>
 
-                <div>
-                  <label htmlFor="observacao" className="block text-sm font-medium text-gray-700 mb-2">Observação</label>
-                  <input
-                    id="observacao"
-                    type="text"
-                    value={movementForm.observacao}
-                    onChange={(e) => setMovementForm(prev => ({ ...prev, observacao: e.target.value }))}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="ex: Compra, Venda, Dano, etc."
-                  />
-                </div>
-
-                {/* Campos de Depósito Condicionais */}
+                 {/* Campos de Depósito Condicionais */}
+                 {/* Exibe Depósito de Origem para SAIDA e TRANSFERENCIA */}
                  {(movementForm.tipo === 'SAIDA' || movementForm.tipo === 'TRANSFERENCIA') && (
                     <div>
                        <label htmlFor="depositoOrigemId" className="block text-sm font-medium text-gray-700 mb-2">Depósito de Origem</label>
@@ -400,6 +462,7 @@ const InventoryManagement: React.FC = () => {
                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                        >
                          <option value="">Selecione o depósito de origem</option>
+                         {/* Mapeia a lista de depósitos carregada pelo hook */}
                          {depositos.map((deposito) => (
                             <option key={deposito.id} value={deposito.id}>
                                {deposito.nome}
@@ -409,6 +472,7 @@ const InventoryManagement: React.FC = () => {
                     </div>
                  )}
 
+                {/* Exibe Depósito de Destino para ENTRADA e TRANSFERENCIA */}
                 {(movementForm.tipo === 'ENTRADA' || movementForm.tipo === 'TRANSFERENCIA') && (
                     <div>
                        <label htmlFor="depositoDestinoId" className="block text-sm font-medium text-gray-700 mb-2">Depósito de Destino</label>
@@ -420,6 +484,7 @@ const InventoryManagement: React.FC = () => {
                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                        >
                          <option value="">Selecione o depósito de destino</option>
+                         {/* Mapeia a lista de depósitos carregada pelo hook */}
                          {depositos.map((deposito) => (
                             <option key={deposito.id} value={deposito.id}>
                                {deposito.nome}
@@ -428,6 +493,19 @@ const InventoryManagement: React.FC = () => {
                        </select>
                     </div>
                  )}
+
+                 {/* Campo de Observação (sempre visível) */}
+                <div>
+                  <label htmlFor="observacao" className="block text-sm font-medium text-gray-700 mb-2">Observação</label>
+                  <input
+                    id="observacao"
+                    type="text"
+                    value={movementForm.observacao}
+                    onChange={(e) => setMovementForm(prev => ({ ...prev, observacao: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    placeholder="ex: Compra, Venda, Dano, etc."
+                  />
+                </div>
 
 
                 <button

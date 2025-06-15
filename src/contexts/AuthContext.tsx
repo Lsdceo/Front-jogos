@@ -1,207 +1,259 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import api from '../config/api.ts'; // Verifique se o caminho para o seu arquivo api.ts está correto
+import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
+import api from '../config/api.ts'; // Assuming api.ts configures axios
 
-// Tipagem para o objeto User
+// Definition of the User interface on the frontend
 interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: 'admin' | 'user';
-  // Adicione outros campos do usuário que seu backend retornar, se necessário
+  id: number; // Assuming the backend ID is numeric
+  email: string; // The user's email
+  name: string; // The user's full name
+  roles: string[]; // List of roles (e.g., ["ROLE_ADMIN", "ROLE_USUARIO"])
 }
 
-// Tipagem para o estado do contexto de autenticação
+// Interface for the authentication state
 interface AuthState {
-  user: User | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  error: string | null; // Adicionado campo para mensagem de erro
+  user: User | null; // Information of the logged-in user
+  isLoading: boolean; // Indicates if an authentication operation is in progress
+  isAuthenticated: boolean; // Indicates if the user is authenticated
+  error: string | null; // Error message for authentication failures
 }
 
-// Tipagem para as ações do reducer
+// Types of actions for the reducer
 type AuthAction =
   | { type: 'LOGIN_START' }
   | { type: 'LOGIN_SUCCESS'; payload: User }
-  | { type: 'LOGIN_FAILURE'; payload: string | null } // Payload pode ser a mensagem de erro
+  | { type: 'LOGIN_FAILURE'; payload: string | null } // Action for failure with error message
   | { type: 'LOGOUT' }
-  | { type: 'REGISTER_START' } // Adicionado ação para início do registro
-  | { type: 'REGISTER_SUCCESS'; payload: any } // Adicionado ação para sucesso no registro, payload pode ser os dados do usuário criado
-  | { type: 'REGISTER_FAILURE'; payload: string | null }; // Adicionado ação para falha no registro
+  | { type: 'REGISTER_SUCCESS'; payload: User } // Kept, adjust if registration has a different flow
+  | { type: 'CLEAR_ERROR' }; // New action to clear the error state
 
-
-// Tipagem para o contexto
-interface AuthContextType {
+// Context creation
+const AuthContext = createContext<{
   state: AuthState;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (email: string, password: string, name: string, role?: 'admin' | 'user') => Promise<boolean>;
+  register: (email: string, password: string, name: string, role?: string) => Promise<boolean>; // Role as string now
   logout: () => void;
-}
+  clearError: () => void; // Function to clear error
+} | null>(null);
 
-// Criação do contexto com valor inicial null
-const AuthContext = createContext<AuthContextType | null>(null);
-
-// Reducer para gerenciar o estado de autenticação
+// Reducer to manage authentication state
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
     case 'LOGIN_START':
-      return { ...state, isLoading: true, error: null };
+      return { ...state, isLoading: true, error: null }; // Clears error at the start of the attempt
     case 'LOGIN_SUCCESS':
       return {
         ...state,
         user: action.payload,
         isLoading: false,
         isAuthenticated: true,
-        error: null, // Limpa qualquer erro anterior
+        error: null, // Ensures error is null on success
+      };
+     case 'REGISTER_SUCCESS': // Adjust according to your registration flow
+       return {
+        ...state,
+        user: action.payload, // If registration logs in automatically
+        isLoading: false,
+        isAuthenticated: true, // If registration logs in automatically
+        error: null, // Ensures error is null on success
       };
     case 'LOGIN_FAILURE':
       return {
-        ...state,
-        isLoading: false,
-        isAuthenticated: false, // Garante que não está autenticado em caso de falha
-        error: action.payload, // Define a mensagem de erro
-      };
-    case 'LOGOUT': // Logout
+          ...state,
+          isLoading: false,
+          user: null, // Ensures user is null on failure
+          isAuthenticated: false, // Ensures isAuthenticated is false on failure
+          error: action.payload || 'Authentication failed', // Uses the payload message or a generic one
+        };
+    case 'LOGOUT':
       return {
         ...state,
         user: null,
         isLoading: false,
         isAuthenticated: false,
-        error: null, // Limpa erro ao deslogar
+        error: null, // Clears error on logout
       };
-    case 'REGISTER_START': // Novo caso para início do registro
-        return { ...state, isLoading: true, error: null };
-    case 'REGISTER_SUCCESS': // Novo caso para sucesso no registro
-        // Não alteramos o estado de autenticação aqui, pois o usuário não loga automaticamente
-        return { ...state, isLoading: false, error: null }; // Apenas paramos o loading e limpamos erro
-    case 'REGISTER_FAILURE': // Novo caso para falha no registro
-        return { ...state, isLoading: false, isAuthenticated: false, error: action.payload }; // Paramos o loading e definimos o erro
+    case 'CLEAR_ERROR':
+        return { ...state, error: null }; // Clears only the error field
     default:
       return state;
   }
 };
 
-// Provedor do contexto de autenticação
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+// Authentication provider
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, {
     user: null,
     isLoading: false,
     isAuthenticated: false,
-    error: null, // Estado inicial com erro nulo
+    error: null, // Added error field to initial state
   });
 
-  // Efeito para carregar o usuário e token salvos ao iniciar a aplicação
+  // Effect to load user from localStorage on initialization
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
-    // Não precisamos necessariamente do token aqui, apenas para saber se há um usuário salvo
-    // O 'api.ts' deve ser configurado para adicionar o token do localStorage automaticamente
-    if (savedUser) {
+    const savedToken = localStorage.getItem('accessToken');
+
+    if (savedUser && savedToken) {
       try {
-        const user = JSON.parse(savedUser);
-        // Basic validation to ensure the parsed object looks like a User
-        if (user && user.id && user.email && user.name && user.role) {
-             dispatch({ type: 'LOGIN_SUCCESS', payload: user });
-        } else {
-            // Clear invalid saved user data
-            localStorage.removeItem('user');
-            localStorage.removeItem('accessToken'); // Remove token too if user data is bad
-        }
+        const user: User = JSON.parse(savedUser);
+        // TODO: Optional: Add a token expiration check here
+        // Before dispatching LOGIN_SUCCESS, you can validate if the token is still valid
+        // And if not, dispatch LOGOUT.
+
+        // Assuming the token and user in localStorage are valid for now
+        dispatch({ type: 'LOGIN_SUCCESS', payload: user });
       } catch (e) {
-         console.error("Failed to parse saved user data:", e);
-         localStorage.removeItem('user');
-         localStorage.removeItem('accessToken');
+        console.error("Failed to parse user from localStorage or invalid token:", e);
+        localStorage.removeItem('user');
+        localStorage.removeItem('accessToken');
+        dispatch({ type: 'LOGOUT' }); // Clears state if there's an error in localStorage
       }
     }
-  }, []); // Array de dependências vazio para rodar apenas uma vez ao montar
+  }, []); // Runs only once on component mount
 
-  // Função de login
+  // Function to clear the error state
+   const clearError = () => {
+        dispatch({ type: 'CLEAR_ERROR' });
+    };
+
+
+  // Login function
   const login = async (email: string, password: string): Promise<boolean> => {
-    dispatch({ type: 'LOGIN_START' }); // Inicia o loading e limpa erro
+    dispatch({ type: 'LOGIN_START' });
 
     try {
-      const response = await api.post('/auth/login', { username: email, password });
+      // Send email as username to the backend
+      const response = await api.post('auth/login', { username: email, password }); // Verify if the endpoint is correct (/auth/login)
 
-      const { accessToken, username, id, roles, name } = response.data; // Ajuste para receber ID, roles e nome se o backend enviar
+      // ** EXTRACTING ROLES, ID, AND NAME FROM THE BACKEND **
+      // Assuming the backend response at the /auth/login endpoint now includes:
+      // id: number, username: string (email), nomeCompleto: string, roles: string[], accessToken: string, ...
+      const { accessToken, id, username, nomeCompleto, roles } = response.data;
 
-      if (accessToken) { // Verificamos apenas o token para o sucesso inicial
-         localStorage.setItem('accessToken', accessToken);
+      // Basic check if essential data is returned
+      if (accessToken && id !== undefined && username && nomeCompleto && Array.isArray(roles)) { // Verified if roles is an array
+        // Build the User object for the frontend USING the actual data from the backend
+        const frontendUser: User = {
+            id: id, // Use the actual ID returned by the backend
+            email: username, // The backend returns the email in the 'username' field after searching by email
+            name: nomeCompleto, // Using the full name from the backend
+            roles: roles, // Saving the actual list of roles
+        };
 
-        // Crie o objeto User com base nos dados REAIS retornados pelo backend no login
-        // Ajuste os nomes das propriedades (id, email, name, role) conforme seu backend retorna
-         const fetchedUser: User = {
-             id: id || username, // Use id se disponível, senão username
-             email: email, // Geralmente o email é o username no login
-             name: name || username, // Use nome se disponível, senão username
-             // Converta as roles do backend (ex: ['ROLE_ADMIN']) para o formato do frontend ('admin')
-             role: roles && Array.isArray(roles) && roles.includes('ROLE_ADMIN') ? 'admin' : 'user', // Added Array.isArray check
-         };
+        // Save the token and the complete User object in localStorage
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('user', JSON.stringify(frontendUser));
 
-        localStorage.setItem('user', JSON.stringify(fetchedUser)); // Salva o objeto User completo
-
-        dispatch({ type: 'LOGIN_SUCCESS', payload: fetchedUser });
-        console.log('Login bem-sucedido. Token e usuário salvos.');
+        // Dispatch success with the actual User object
+        dispatch({ type: 'LOGIN_SUCCESS', payload: frontendUser });
+        console.log('Login successful. Token and user saved.', frontendUser); // Logs the user object
         return true;
       } else {
-         console.error('Resposta da API de login incompleta: accessToken faltando.');
-         dispatch({ type: 'LOGIN_FAILURE', payload: 'Resposta da API de login incompleta.' });
+         console.error('Incomplete login API response: user data missing.', response.data); // Logs the response for debugging
+         dispatch({ type: 'LOGIN_FAILURE', payload: 'Incomplete API response' });
          return false;
       }
 
-    } catch (error: any) {
-      console.error('Erro durante o login:', error.response?.data || error.message);
-      // Extrai mensagem de erro do backend se disponível, senão usa uma genérica
-      const errorMessage = error.response?.data?.message || 'Credenciais inválidas. Verifique seu email e senha.';
+    } catch (error: any) { // Use 'any' or a more specific type for error (e.g., AxiosError)
+      console.error('Error during login:', error.response?.data || error.message);
+      let errorMessage = 'An error occurred while trying to log in.';
+      if (error.response && error.response.data && error.response.data.message) {
+           errorMessage = error.response.data.message; // Uses backend error message if available
+      } else if (error.message) {
+           errorMessage = error.message;
+      }
+
       dispatch({ type: 'LOGIN_FAILURE', payload: errorMessage });
       return false;
     }
   };
 
-  // Função de registro
-  const register = async (email: string, password: string, name: string, role: 'admin' | 'user' = 'user'): Promise<boolean> => {
-    dispatch({ type: 'REGISTER_START' }); // Inicia o loading para registro
+  // Registration function (adjusted to receive role as string)
+  const register = async (email: string, password: string, name: string, role: string = 'USUARIO'): Promise<boolean> => {
+    dispatch({ type: 'LOGIN_START' }); // Using LOGIN_START to indicate loading
 
     try {
-        // Usando o endpoint 'registrar' que está permitido no backend
-        const response = await api.post('/auth/registrar', { email, password, username: name, roleName: role.toUpperCase() });
+        // Adapt the endpoint and request body to match your backend registration API
+        // Assuming the backend expects { email, password, username, roleName } for registration
+        // and returns a user object similar to login on success
+        const response = await api.post('/auth/registrar', { // Verify if the endpoint is correct (/auth/registrar)
+            email: email,
+            password: password,
+            username: name, // Sending the full name as username for backend registration
+            // If your backend expects 'roleName', send it as a string (e.g., "ROLE_ADMIN")
+             roleName: role.toUpperCase() // Sending the role as an uppercase string, adjust as your backend expects
+        });
 
-        console.log('Registro bem-sucedido na API.', response.data); // Log a resposta da API
+         // Assuming the backend returns a user object similar to login on successful registration
+         const { accessToken, id, username: registeredEmail, nomeCompleto, roles } = response.data;
 
-        // Dispatch uma ação indicando APENAS que o registro na API foi bem-sucedido.
-        // Esta ação NÃO deve logar o usuário automaticamente se o backend não retornou token.
-        // Ajuste o payload se quiser salvar algum dado retornado (ex: ID do usuário criado)
-        dispatch({ type: 'REGISTER_SUCCESS', payload: response.data }); // Dispatch com os dados retornados
 
-        return true; // Indica que a chamada da API de registro foi bem-sucedida
+         if (accessToken && id !== undefined && registeredEmail && nomeCompleto && Array.isArray(roles)) { // Verified if roles is an array
+            // Build the User object for the frontend USING the actual data from the backend returned on registration
+             const frontendUser: User = {
+                 id: id,
+                 email: registeredEmail,
+                 name: nomeCompleto,
+                 roles: roles,
+             };
 
-    } catch (error: any) {
-        console.error('Erro durante o registro:', error.response?.data || error.message);
-        const errorMessage = error.response?.data?.message || 'Ocorreu um erro durante o registro. Tente novamente.';
-        dispatch({ type: 'REGISTER_FAILURE', payload: errorMessage }); // Dispara a ação de falha específica do registro
+            localStorage.setItem('accessToken', accessToken);
+            localStorage.setItem('user', JSON.stringify(frontendUser)); // Saves the created User object
+            dispatch({ type: 'REGISTER_SUCCESS', payload: frontendUser }); // Kept REGISTER_SUCCESS
+            console.log('Registration successful. Token and user saved.', frontendUser); // Logs the user object
+            return true;
+        } else {
+            console.error('Incomplete registration API response.', response.data); // Logs the response for debugging
+            dispatch({ type: 'LOGIN_FAILURE', payload: 'Incomplete registration API response' }); // Using LOGIN_FAILURE, can create REGISTER_FAILURE
+            return false;
+        }
+
+    } catch (error: any) { // Use 'any' or a more specific type for error
+        console.error('Error during registration:', error.response?.data || error.message);
+        let errorMessage = 'An error occurred while trying to register.';
+         if (error.response && error.response.data && error.response.data.message) {
+             errorMessage = error.response.data.message; // If the backend sends an error message in the body
+         } else if (error.message) {
+            errorMessage = error.message;
+         }
+        dispatch({ type: 'LOGIN_FAILURE', payload: errorMessage }); // Using LOGIN_FAILURE, can create REGISTER_FAILURE
         return false;
     }
   };
 
-  // Função de logout
+
+  // Logout function
   const logout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('user');
     dispatch({ type: 'LOGOUT' });
-    console.log('Usuário deslogado.');
+    console.log('Logout successful. Token and user removed.');
   };
 
-  // Fornece o estado e as funções para os componentes filhos
+  // The `useAuth` hook will read the state from this context
   return (
-    <AuthContext.Provider value={{ state, login, register, logout }}>
+    <AuthContext.Provider value={{ state, login, register, logout, clearError }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Hook customizado para usar o contexto de autenticação
+// Custom hook to consume the context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    // Lança um erro se o hook for usado fora do AuthProvider
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  return context;
+  // Adds logic to easily check roles in components
+  // Checks if the user exists, if the roles array exists, and if it includes 'ROLE_ADMIN'
+  const isAdmin = context.state.user?.roles?.includes('ROLE_ADMIN') || false;
+  const isUser = context.state.user?.roles?.includes('ROLE_USUARIO') || false; // Example for USUARIO
+  // TODO: Add other role checks if needed
+
+  return {
+    ...context, // Returns the entire original context (state, login, register, logout, clearError)
+    isAdmin, // Adds the boolean isAdmin property
+    isUser, // Adds the boolean isUser property
+    // ... Add other role properties here if created
+  };
 };

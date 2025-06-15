@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useGamesAndInventory } from '../hooks/useGamesAndInventory';
+// Use the modified useAuth hook
 import { useAuth } from '../contexts/AuthContext';
-import GameForm from '../components/GameForm';
-import GameDetails from '../components/GameDetails'; // Importe o novo componente
-import { // Mantenha apenas os ícones necessários
+import GameForm from './GameForm';
+import {
   Search,
   Plus,
   Edit,
@@ -14,29 +14,30 @@ import { // Mantenha apenas os ícones necessários
   Gamepad2
 } from 'lucide-react';
 
-// Importe a interface Game se estiver definida em ../types
+// Adjust: Types now come from the back, so you can import from ../types if you want custom extra fields
 // import { Game } from '../types';
 
 const GamesList: React.FC = () => {
+  // Use the hook!
   const { games, loading, deleteGame, updateGame } = useGamesAndInventory();
-  const { state } = useAuth();
+  // Use the modified useAuth hook
+  const { isAdmin } = useAuth();
 
+
+  // Filters will need to be adapted for the new backend fields!
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('');
   const [showForm, setShowForm] = useState(false);
-  const [editingGame, setEditingGame] = useState<any | null>(null);
+  const [editingGame, setEditingGame] = useState<any | null>(null); // Adjust the type according to your new model
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  // --- NOVO ESTADO PARA CONTROLAR A VISUALIZAÇÃO ---
-  const [viewingGame, setViewingGame] = useState<any | null>(null); // Estado para o jogo que está sendo visualizado
-
+  // Adapted filters: now filter by title, genre, and developer
   const filteredGames = useMemo(() => {
     return games.filter(game => {
       const matchesSearch =
         game.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
         game.genero.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        game.desenvolvedora.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        game.publicadora.toLowerCase().includes(searchTerm.toLowerCase()); // Incluindo publicadora na busca
+        game.desenvolvedora.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesGenre =
         selectedGenre === '' || game.genero === selectedGenre;
@@ -45,38 +46,25 @@ const GamesList: React.FC = () => {
     });
   }, [games, searchTerm, selectedGenre]);
 
+  // Dynamic listing of available genres
   const genres = useMemo(() => {
     const set = new Set<string>();
     games.forEach(g => set.add(g.genero));
     return Array.from(set);
   }, [games]);
 
-  // Editar jogo
+  // Edit game
   const handleEdit = (game: any) => {
     setEditingGame(game);
     setShowForm(true);
-    setViewingGame(null); // Fecha a visualização se estiver aberta
   };
 
-  // Remover jogo
+  // Remove game
   const handleDelete = (gameId: number) => {
-    if (window.confirm('Tem certeza que deseja excluir este jogo?')) {
+    if (window.confirm('Are you sure you want to delete this game?')) {
       deleteGame(gameId);
     }
   };
-
-  // --- FUNÇÃO handleView ATUALIZADA ---
-  const handleView = (game: any) => {
-    setViewingGame(game); // Define o jogo para ser visualizado
-    setEditingGame(null); // Garante que o formulário de edição não esteja aberto
-    setShowForm(false);   // Garante que o formulário de adição não esteja aberto
-  };
-
-  // --- FUNÇÃO PARA FECHAR A VISUALIZAÇÃO ---
-  const handleCloseView = () => {
-    setViewingGame(null); // Limpa o estado do jogo sendo visualizado
-  };
-
 
   if (loading) {
     return (
@@ -86,9 +74,6 @@ const GamesList: React.FC = () => {
     );
   }
 
-   // --- RENDERIZAÇÃO CONDICIONAL: GameForm ou GameDetails ou a Lista ---
-
-   // Se o formulário de adição/edição estiver aberto, renderize-o
   if (showForm) {
     return (
       <GameForm
@@ -101,32 +86,22 @@ const GamesList: React.FC = () => {
     );
   }
 
-   // Se um jogo estiver sendo visualizado, renderize o componente GameDetails
-   if (viewingGame) {
-     return (
-       <GameDetails
-         game={viewingGame} // Passa os dados do jogo selecionado
-         onClose={handleCloseView} // Passa a função para fechar a visualização
-       />
-     );
-   }
-
-   // Se nenhum formulário ou visualização estiver aberto, renderize a lista de jogos
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Biblioteca de Jogos</h2>
-          <p className="text-gray-600">{filteredGames.length} jogos encontrados</p>
+          <h2 className="text-2xl font-bold text-gray-900">Game Library</h2>
+          <p className="text-gray-600">{filteredGames.length} games found</p>
         </div>
-        {state.user?.role === 'admin' && (
+        {/* Conditionally display the Add Game button */}
+        {isAdmin && (
           <button
             onClick={() => setShowForm(true)}
             className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center space-x-2"
           >
             <Plus className="w-4 h-4" />
-            <span>Adicionar Jogo</span>
+            <span>Add Game</span>
           </button>
         )}
       </div>
@@ -138,7 +113,7 @@ const GamesList: React.FC = () => {
             <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Buscar por título, gênero ou desenvolvedora..."
+              placeholder="Search by title, genre, or developer..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
@@ -150,7 +125,7 @@ const GamesList: React.FC = () => {
             onChange={(e) => setSelectedGenre(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           >
-            <option value="">Todos os Gêneros</option>
+            <option value="">All Genres</option>
             {genres.map(genre => (
               <option key={genre} value={genre}>{genre}</option>
             ))}
@@ -165,7 +140,7 @@ const GamesList: React.FC = () => {
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              Grade
+              Grid
             </button>
             <button
               onClick={() => setViewMode('list')}
@@ -175,7 +150,7 @@ const GamesList: React.FC = () => {
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              Lista
+              List
             </button>
           </div>
         </div>
@@ -194,7 +169,7 @@ const GamesList: React.FC = () => {
                 />
                 <div className="absolute top-3 right-3 flex items-center space-x-1">
                   <Package className="w-4 h-4 text-white" />
-                  {/* Se você tiver estoque associado, pode mostrar aqui */}
+                  {/* If you have associated inventory, you can show it here */}
                   {/* <span className="text-white text-sm font-medium">{getQuantityForGame(game.id)}</span> */}
                 </div>
               </div>
@@ -202,7 +177,7 @@ const GamesList: React.FC = () => {
               <div className="p-4">
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="font-semibold text-gray-900 text-lg">{game.titulo}</h3>
-                  {/* Se quiser mostrar avaliação, adapte conforme backend */}
+                  {/* If you want to show rating, adapt according to backend */}
                   {/* {game.rating && (
                     <div className="flex items-center space-x-1">
                       <Star className="w-4 h-4 text-yellow-500 fill-current" />
@@ -219,15 +194,13 @@ const GamesList: React.FC = () => {
                 </div>
 
                 <div className="flex space-x-2">
-                   {/* CHAMA handleView AO CLICAR NO BOTÃO "Ver" */}
-                  <button
-                     onClick={() => handleView(game)}
-                     className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center space-x-1">
+                  <button className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center space-x-1">
                     <Eye className="w-4 h-4" />
-                    <span>Ver</span>
+                    <span>View</span>
                   </button>
 
-                  {state.user?.role === 'admin' && (
+                  {/* Conditionally display Edit and Delete buttons */}
+                  {isAdmin && (
                     <>
                       <button
                         onClick={() => handleEdit(game)}
@@ -254,11 +227,11 @@ const GamesList: React.FC = () => {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jogo</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gênero</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Desenvolvedora</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Preço</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Game</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Genre</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Developer</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -277,13 +250,11 @@ const GamesList: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">R$ {game.precoSugerido?.toFixed(2)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
-                         {/* CHAMA handleView AO CLICAR NO BOTÃO "Ver" */}
-                        <button
-                           onClick={() => handleView(game)}
-                           className="text-indigo-600 hover:text-indigo-900">
+                        <button className="text-indigo-600 hover:text-indigo-900">
                           <Eye className="w-4 h-4" />
                         </button>
-                        {state.user?.role === 'admin' && (
+                         {/* Conditionally display Edit and Delete buttons */}
+                        {isAdmin && (
                           <>
                             <button
                               onClick={() => handleEdit(game)}
@@ -314,14 +285,15 @@ const GamesList: React.FC = () => {
           <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Gamepad2 className="w-12 h-12 text-gray-400" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum jogo encontrado</h3>
-          <p className="text-gray-500 mb-4">Tente ajustar sua busca ou filtros</p>
-          {state.user?.role === 'admin' && (
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No games found</h3>
+          <p className="text-gray-500 mb-4">Try adjusting your search or filters</p>
+           {/* Conditionally display the Add Game button */}
+          {isAdmin && (
             <button
               onClick={() => setShowForm(true)}
               className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
             >
-              Adicionar Seu Primeiro Jogo
+              Add Your First Game
             </button>
           )}
         </div>
