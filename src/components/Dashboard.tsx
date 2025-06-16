@@ -93,27 +93,27 @@ const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 text-white">
-        <h2 className="text-2xl font-bold mb-2">Bem-vindo ao GameVault</h2>
-        <p className="text-indigo-100">Gerencie seu inventário de jogos com facilidade e precisão</p>
+      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-4 md:p-6 text-white">
+        <h2 className="text-xl md:text-2xl font-bold mb-2">Bem-vindo ao GameVault</h2>
+        <p className="text-indigo-100 text-sm md:text-base">Gerencie seu inventário de jogos com facilidade e precisão</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <div key={index} className="bg-white rounded-xl p-6 shadow-sm border hover:shadow-md transition-shadow">
+            <div key={index} className="bg-white rounded-xl p-4 md:p-6 shadow-sm border hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
-                  <p className="text-sm text-gray-500 mt-1">{stat.change}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs md:text-sm font-medium text-gray-600 truncate">{stat.title}</p>
+                  <p className="text-lg md:text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
+                  <p className="text-xs md:text-sm text-gray-500 mt-1 truncate">{stat.change}</p>
                 </div>
-                <div className={`${stat.color} p-3 rounded-lg`}>
-                  <Icon className="w-6 h-6 text-white" />
+                <div className={`${stat.color} p-2 md:p-3 rounded-lg flex-shrink-0 ml-2`}>
+                  <Icon className="w-4 h-4 md:w-6 md:h-6 text-white" />
                 </div>
               </div>
             </div>
@@ -122,50 +122,50 @@ const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Ações Rápidas</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border">
+        <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4">Ações Rápidas</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           <button
             onClick={() => onPageChange('games')}
-            className="flex items-center p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
+            className="flex items-center p-3 md:p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
           >
-            <Plus className="w-5 h-5 text-indigo-600 mr-3" />
-            <span className="font-medium text-indigo-600">Adicionar Novo Jogo</span>
+            <Plus className="w-4 h-4 md:w-5 md:h-5 text-indigo-600 mr-2 md:mr-3 flex-shrink-0" />
+            <span className="font-medium text-indigo-600 text-sm md:text-base">Adicionar Novo Jogo</span>
           </button>
           <button
             onClick={() => onPageChange('inventory')}
-            className="flex items-center p-4 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors"
+            className="flex items-center p-3 md:p-4 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors"
           >
-            <Package className="w-5 h-5 text-emerald-600 mr-3" />
-            <span className="font-medium text-emerald-600">Gerenciar Estoque</span>
+            <Package className="w-4 h-4 md:w-5 md:h-5 text-emerald-600 mr-2 md:mr-3 flex-shrink-0" />
+            <span className="font-medium text-emerald-600 text-sm md:text-base">Gerenciar Estoque</span>
           </button>
           <button
             onClick={() => onPageChange('reports')}
-            className="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
+            className="flex items-center p-3 md:p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors sm:col-span-2 lg:col-span-1"
           >
-            <Eye className="w-5 h-5 text-purple-600 mr-3" />
-            <span className="font-medium text-purple-600">Ver Relatórios</span>
+            <Eye className="w-4 h-4 md:w-5 md:h-5 text-purple-600 mr-2 md:mr-3 flex-shrink-0" />
+            <span className="font-medium text-purple-600 text-sm md:text-base">Ver Relatórios</span>
           </button>
         </div>
       </div>
 
       {/* Platform Distribution & Low Stock Alerts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Platform Distribution */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Jogos por Plataforma</h3>
+        <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border">
+          <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4">Jogos por Plataforma</h3>
           <div className="space-y-3">
             {Object.entries(platformStats).map(([platform, count]) => (
               <div key={platform} className="flex items-center justify-between">
-                <span className="text-gray-600">{platform}</span>
-                <div className="flex items-center space-x-2">
-                  <div className="w-32 bg-gray-200 rounded-full h-2">
+                <span className="text-gray-600 text-sm md:text-base truncate flex-1 mr-2">{platform}</span>
+                <div className="flex items-center space-x-2 flex-shrink-0">
+                  <div className="w-20 md:w-32 bg-gray-200 rounded-full h-2">
                     <div
                       className="bg-indigo-600 h-2 rounded-full"
                       style={{ width: `${(count / (totalGames || 1)) * 100}%` }}
                     ></div>
                   </div>
-                  <span className="text-sm font-medium text-gray-900">{count}</span>
+                  <span className="text-xs md:text-sm font-medium text-gray-900 w-8 text-right">{count}</span>
                 </div>
               </div>
             ))}
@@ -173,49 +173,49 @@ const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
         </div>
 
         {/* Low Stock Alerts */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Alertas de Estoque Baixo</h3>
+        <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border">
+          <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4">Alertas de Estoque Baixo</h3>
           {lowStockItems.length > 0 ? (
             <div className="space-y-3">
               {lowStockItems.slice(0, 5).map((item) => (
                 <div key={item.id} className="flex items-center justify-between p-3 bg-amber-50 rounded-lg">
-                  <div>
-                    <p className="font-medium text-gray-900">{item.jogoTitulo}</p>
-                    <p className="text-sm text-gray-600">{item.plataformaNome}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 text-sm md:text-base truncate">{item.jogoTitulo}</p>
+                    <p className="text-xs md:text-sm text-gray-600 truncate">{item.plataformaNome}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-amber-600">
+                  <div className="text-right flex-shrink-0 ml-2">
+                    <p className="text-xs md:text-sm font-medium text-amber-600">
                       Estoque: {item.quantidade}
                     </p>
-                    <p className="text-xs text-gray-500">ID Estoque: {item.id}</p>
+                    <p className="text-xs text-gray-500">ID: {item.id}</p>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Package className="w-8 h-8 text-emerald-600" />
+            <div className="text-center py-6 md:py-8">
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
+                <Package className="w-6 h-6 md:w-8 md:h-8 text-emerald-600" />
               </div>
-              <p className="text-gray-600">Todos os itens estão bem estocados!</p>
+              <p className="text-gray-600 text-sm md:text-base">Todos os itens estão bem estocados!</p>
             </div>
           )}
         </div>
       </div>
 
       {/* Recent Inventory Activity */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Itens Recentes no Estoque</h3>
+      <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border">
+        <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4">Itens Recentes no Estoque</h3>
         {recentInventory.length > 0 ? (
           <div className="space-y-3">
             {recentInventory.map((item) => (
               <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900">{item.jogoTitulo}</p>
-                  <p className="text-sm text-gray-600">{item.plataformaNome}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 text-sm md:text-base truncate">{item.jogoTitulo}</p>
+                  <p className="text-xs md:text-sm text-gray-600 truncate">{item.plataformaNome}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">
+                <div className="text-right flex-shrink-0 ml-2">
+                  <p className="text-xs md:text-sm font-medium">
                     Qtd: {item.quantidade}
                   </p>
                   <p className="text-xs text-gray-500">R$ {item.precoUnitarioAtual.toFixed(2)}</p>
@@ -224,7 +224,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
             ))}
           </div>
         ) : (
-          <p className="text-center text-gray-500 py-8">Nenhuma atividade recente</p>
+          <p className="text-center text-gray-500 py-6 md:py-8 text-sm md:text-base">Nenhuma atividade recente</p>
         )}
       </div>
     </div>

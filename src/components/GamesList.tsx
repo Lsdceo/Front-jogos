@@ -11,7 +11,9 @@ import {
   Eye,
   Star,
   Package,
-  Gamepad2
+  Gamepad2,
+  Grid3X3,
+  List
 } from 'lucide-react';
 
 // Adjust: Types now come from the back, so you can import from ../types if you want custom extra fields
@@ -106,18 +108,18 @@ const GamesList: React.FC = () => {
 
   // Otherwise, render the game list/grid
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Game Library</h2>
-          <p className="text-gray-600">{filteredGames.length} games found</p>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900">Game Library</h2>
+          <p className="text-gray-600 text-sm md:text-base">{filteredGames.length} games found</p>
         </div>
         {/* Conditionally display the Add Game button */}
         {isAdmin && (
           <button
             onClick={() => setShowForm(true)}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center space-x-2"
+            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center space-x-2 text-sm md:text-base"
           >
             <Plus className="w-4 h-4" />
             <span>Add Game</span>
@@ -126,23 +128,23 @@ const GamesList: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border">
+        <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-3 md:gap-4">
           <div className="relative">
-            <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Search className="w-4 h-4 md:w-5 md:h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Search by title, genre, or developer..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full pl-9 md:pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm md:text-base"
             />
           </div>
 
           <select
             value={selectedGenre}
             onChange={(e) => setSelectedGenre(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm md:text-base"
           >
             <option value="">All Genres</option>
             {genres.map(genre => (
@@ -153,23 +155,25 @@ const GamesList: React.FC = () => {
           <div className="flex space-x-2">
             <button
               onClick={() => setViewMode('grid')}
-              className={`px-3 py-2 rounded-lg transition-colors ${
+              className={`flex-1 md:flex-none px-3 py-2 rounded-lg transition-colors flex items-center justify-center space-x-1 text-sm md:text-base ${
                 viewMode === 'grid'
                   ? 'bg-indigo-100 text-indigo-600'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              Grid
+              <Grid3X3 className="w-4 h-4" />
+              <span>Grid</span>
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`px-3 py-2 rounded-lg transition-colors ${
+              className={`flex-1 md:flex-none px-3 py-2 rounded-lg transition-colors flex items-center justify-center space-x-1 text-sm md:text-base ${
                 viewMode === 'list'
                   ? 'bg-indigo-100 text-indigo-600'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              List
+              <List className="w-4 h-4" />
+              <span>List</span>
             </button>
           </div>
         </div>
@@ -177,25 +181,25 @@ const GamesList: React.FC = () => {
 
       {/* Games Grid/List */}
       {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           {filteredGames.map((game) => (
             <div key={game.id} className="bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-shadow cursor-pointer"> {/* Added cursor-pointer */}
               <div className="relative">
                 <img
                   src={game.urlImagemCapa}
                   alt={game.titulo}
-                  className="w-full h-48 object-cover"
+                  className="w-full h-40 md:h-48 object-cover"
                 />
-                <div className="absolute top-3 right-3 flex items-center space-x-1">
-                  <Package className="w-4 h-4 text-white" />
+                <div className="absolute top-2 md:top-3 right-2 md:right-3 flex items-center space-x-1">
+                  <Package className="w-3 h-3 md:w-4 md:h-4 text-white" />
                   {/* If you have associated inventory, you can show it here */}
                   {/* <span className="text-white text-sm font-medium">{getQuantityForGame(game.id)}</span> */}
                 </div>
               </div>
 
-              <div className="p-4">
+              <div className="p-3 md:p-4">
                 <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold text-gray-900 text-lg">{game.titulo}</h3>
+                  <h3 className="font-semibold text-gray-900 text-sm md:text-lg truncate flex-1">{game.titulo}</h3>
                   {/* If you want to show rating, adapt according to backend */}
                   {/* {game.rating && (
                     <div className="flex items-center space-x-1">
@@ -205,23 +209,23 @@ const GamesList: React.FC = () => {
                   )} */}
                 </div>
 
-                <p className="text-gray-600 text-sm mb-2">{game.genero}</p>
-                <p className="text-gray-500 text-sm mb-3">{game.desenvolvedora}</p>
+                <p className="text-gray-600 text-xs md:text-sm mb-1 md:mb-2 truncate">{game.genero}</p>
+                <p className="text-gray-500 text-xs md:text-sm mb-2 md:mb-3 truncate">{game.desenvolvedora}</p>
 
-                <div className="flex items-center justify-between mb-4">
-                  <span className="font-bold text-lg text-gray-900">R$ {game.precoSugerido?.toFixed(2)}</span>
+                <div className="flex items-center justify-between mb-3 md:mb-4">
+                  <span className="font-bold text-sm md:text-lg text-gray-900">R$ {game.precoSugerido?.toFixed(2)}</span>
                 </div>
 
-                <div className="flex space-x-2">
+                <div className="flex space-x-1 md:space-x-2">
                   {/* Modified View button to call handleViewDetails */}
                   <button
                       onClick={(e) => {
                           e.stopPropagation(); // Prevent triggering the card click
                           handleViewDetails(game);
                       }}
-                      className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center space-x-1"
+                      className="flex-1 bg-gray-100 text-gray-700 px-2 md:px-3 py-1.5 md:py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center space-x-1 text-xs md:text-sm"
                   >
-                    <Eye className="w-4 h-4" />
+                    <Eye className="w-3 h-3 md:w-4 md:h-4" />
                     <span>View</span>
                   </button>
 
@@ -233,18 +237,18 @@ const GamesList: React.FC = () => {
                            e.stopPropagation(); // Prevent triggering the card click
                            handleEdit(game);
                         }}
-                        className="bg-indigo-100 text-indigo-600 px-3 py-2 rounded-lg hover:bg-indigo-200 transition-colors"
+                        className="bg-indigo-100 text-indigo-600 px-2 md:px-3 py-1.5 md:py-2 rounded-lg hover:bg-indigo-200 transition-colors"
                       >
-                        <Edit className="w-4 h-4" />
+                        <Edit className="w-3 h-3 md:w-4 md:h-4" />
                       </button>
                       <button
                         onClick={(e) => {
                            e.stopPropagation(); // Prevent triggering the card click
                            handleDelete(game.id);
                         }}
-                        className="bg-red-100 text-red-600 px-3 py-2 rounded-lg hover:bg-red-200 transition-colors"
+                        className="bg-red-100 text-red-600 px-2 md:px-3 py-1.5 md:py-2 rounded-lg hover:bg-red-200 transition-colors"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
                       </button>
                     </>
                   )}
@@ -259,33 +263,30 @@ const GamesList: React.FC = () => {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Game</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Genre</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Developer</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Game</th>
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Genre</th>
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Developer</th>
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredGames.map((game) => (
                   <tr key={game.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => handleViewDetails(game)}> {/* Added onClick to the row */}
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <img className="h-10 w-10 rounded-lg object-cover" src={game.urlImagemCapa} alt={game.titulo} />
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{game.titulo}</div>
+                        <img className="h-8 w-8 md:h-10 md:w-10 rounded-lg object-cover flex-shrink-0" src={game.urlImagemCapa} alt={game.titulo} />
+                        <div className="ml-2 md:ml-4 min-w-0">
+                          <div className="text-xs md:text-sm font-medium text-gray-900 truncate">{game.titulo}</div>
+                          <div className="text-xs text-gray-500 sm:hidden truncate">{game.genero}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{game.genero}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{game.desenvolvedora}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">R$ {game.precoSugerido?.toFixed(2)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                         {/* Modified View button (can be removed as clicking the row now views details) */}
-                         {/* <button className="text-indigo-600 hover:text-indigo-900">
-                          <Eye className="w-4 h-4" />
-                        </button> */}
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-xs md:text-sm text-gray-900 hidden sm:table-cell">{game.genero}</td>
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-xs md:text-sm text-gray-900 hidden md:table-cell truncate max-w-32">{game.desenvolvedora}</td>
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-xs md:text-sm font-medium text-gray-900">R$ {game.precoSugerido?.toFixed(2)}</td>
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-xs md:text-sm font-medium">
+                      <div className="flex space-x-1 md:space-x-2">
                          {/* Conditionally display Edit and Delete buttons */}
                         {isAdmin && (
                           <>
@@ -294,18 +295,18 @@ const GamesList: React.FC = () => {
                                  e.stopPropagation(); // Prevent triggering the row click
                                  handleEdit(game);
                               }}
-                              className="text-indigo-600 hover:text-indigo-900"
+                              className="text-indigo-600 hover:text-indigo-900 p-1"
                             >
-                              <Edit className="w-4 h-4" />
+                              <Edit className="w-3 h-3 md:w-4 md:h-4" />
                             </button>
                             <button
                               onClick={(e) => {
                                  e.stopPropagation(); // Prevent triggering the row click
                                  handleDelete(game.id);
                               }}
-                              className="text-red-600 hover:text-red-900"
+                              className="text-red-600 hover:text-red-900 p-1"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
                             </button>
                           </>
                         )}
@@ -320,17 +321,17 @@ const GamesList: React.FC = () => {
       )}
 
       {filteredGames.length === 0 && (
-        <div className="text-center py-12">
-          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Gamepad2 className="w-12 h-12 text-gray-400" />
+        <div className="text-center py-8 md:py-12">
+          <div className="w-16 h-16 md:w-24 md:h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Gamepad2 className="w-8 h-8 md:w-12 md:h-12 text-gray-400" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No games found</h3>
-          <p className="text-gray-500 mb-4">Try adjusting your search or filters</p>
+          <h3 className="text-base md:text-lg font-medium text-gray-900 mb-2">No games found</h3>
+          <p className="text-gray-500 mb-4 text-sm md:text-base">Try adjusting your search or filters</p>
            {/* Conditionally display the Add Game button */}
           {isAdmin && (
             <button
               onClick={() => setShowForm(true)}
-              className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+              className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors text-sm md:text-base"
             >
               Add Your First Game
             </button>

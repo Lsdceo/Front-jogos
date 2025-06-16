@@ -68,20 +68,20 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegisterMode }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 md:p-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Gamepad2 className="w-8 h-8 text-white" />
+        <div className="text-center mb-6 md:mb-8">
+          <div className="w-12 h-12 md:w-16 md:h-16 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
+            <Gamepad2 className="w-6 h-6 md:w-8 md:h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">GameVault</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">GameVault</h1>
+          <p className="text-gray-600 mt-2 text-sm md:text-base">
             {isRegisterMode ? 'Crie sua conta' : 'Bem-vindo de volta'}
           </p>
         </div>
 
         {/* Demo Accounts Info */}
-        <div className="bg-indigo-50 rounded-lg p-4 mb-6">
+        <div className="bg-indigo-50 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
           <p className="text-sm font-medium text-indigo-900 mb-2">Contas de Demonstração:</p>
           <div className="text-xs text-indigo-700 space-y-1">
             <p><strong>Admin:</strong> admin@example.com (qualquer senha)</p>
@@ -90,7 +90,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegisterMode }) => {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           {isRegisterMode && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -102,7 +102,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegisterMode }) => {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+                className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors text-sm md:text-base"
                 placeholder="Digite seu nome completo"
               />
             </div>
@@ -118,7 +118,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegisterMode }) => {
               value={formData.email}
               onChange={handleChange}
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+              className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors text-sm md:text-base"
               placeholder="Digite seu email"
             />
           </div>
@@ -134,7 +134,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegisterMode }) => {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+                className="w-full px-3 md:px-4 py-2 md:py-3 pr-10 md:pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors text-sm md:text-base"
                 placeholder="Digite sua senha"
               />
               <button
@@ -142,7 +142,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegisterMode }) => {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPassword ? <EyeOff className="w-4 h-4 md:w-5 md:h-5" /> : <Eye className="w-4 h-4 md:w-5 md:h-5" />}
               </button>
             </div>
           </div>
@@ -156,7 +156,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegisterMode }) => {
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+                className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors text-sm md:text-base"
               >
                 <option value="user">Usuário (Apenas Visualização)</option>
                 <option value="admin">Administrador (Acesso Completo)</option>
@@ -173,10 +173,10 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegisterMode }) => {
           <button
             type="submit"
             disabled={state.isLoading} // Desabilita o botão se estiver carregando
-            className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors disabled:opacity-50 flex items-center justify-center"
+            className="w-full bg-indigo-600 text-white py-2 md:py-3 px-4 rounded-lg hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors disabled:opacity-50 flex items-center justify-center text-sm md:text-base"
           >
             {state.isLoading ? ( // Mostra spinner se estiver carregando
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              <div className="animate-spin rounded-full h-4 w-4 md:h-5 md:w-5 border-b-2 border-white"></div>
             ) : (
               isRegisterMode ? 'Criar Conta' : 'Entrar'
             )}
@@ -184,7 +184,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegisterMode }) => {
         </form>
 
         {/* Toggle Mode */}
-        <div className="mt-6 text-center">
+        <div className="mt-4 md:mt-6 text-center">
           <p className="text-sm text-gray-600">
             {isRegisterMode ? 'Já tem uma conta?' : 'Não tem uma conta?'}
             <button

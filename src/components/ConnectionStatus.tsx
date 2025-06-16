@@ -36,26 +36,26 @@ const ConnectionStatus: React.FC = () => {
   if (isConnected === null && !isChecking) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-50">
-      <div className={`flex items-center space-x-2 px-4 py-2 rounded-lg shadow-lg transition-all ${
+    <div className="fixed top-2 md:top-4 right-2 md:right-4 z-50">
+      <div className={`flex items-center space-x-1 md:space-x-2 px-2 md:px-4 py-1 md:py-2 rounded-lg shadow-lg transition-all ${
         isConnected 
           ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
           : 'bg-red-100 text-red-800 border border-red-200'
       }`}>
         {isChecking ? (
-          <RefreshCw className="w-4 h-4 animate-spin" />
+          <RefreshCw className="w-3 h-3 md:w-4 md:h-4 animate-spin" />
         ) : isConnected ? (
-          <Wifi className="w-4 h-4" />
+          <Wifi className="w-3 h-3 md:w-4 md:h-4" />
         ) : (
-          <WifiOff className="w-4 h-4" />
+          <WifiOff className="w-3 h-3 md:w-4 md:h-4" />
         )}
         
         <div className="flex flex-col">
-          <span className="text-sm font-medium">
-            {isChecking ? 'Verificando conexão...' : isConnected ? 'Backend Azure Online' : 'Backend Offline'}
+          <span className="text-xs md:text-sm font-medium">
+            {isChecking ? 'Verificando...' : isConnected ? 'Backend Online' : 'Backend Offline'}
           </span>
           {lastCheck && (
-            <span className="text-xs opacity-75">
+            <span className="text-xs opacity-75 hidden md:block">
               {lastCheck.toLocaleTimeString()}
             </span>
           )}
@@ -64,16 +64,16 @@ const ConnectionStatus: React.FC = () => {
         {!isConnected && !isChecking && (
           <button
             onClick={checkConnection}
-            className="ml-2 p-1 hover:bg-red-200 rounded transition-colors"
+            className="ml-1 md:ml-2 p-1 hover:bg-red-200 rounded transition-colors"
             title="Tentar reconectar"
           >
-            <RefreshCw className="w-3 h-3" />
+            <RefreshCw className="w-2 h-2 md:w-3 md:h-3" />
           </button>
         )}
       </div>
       
-      {/* URL do backend para debug */}
-      <div className="mt-1 text-xs text-gray-500 bg-white px-2 py-1 rounded shadow text-center">
+      {/* URL do backend para debug - Hidden on mobile */}
+      <div className="mt-1 text-xs text-gray-500 bg-white px-2 py-1 rounded shadow text-center hidden md:block">
         jogos-inventario.azurewebsites.net
       </div>
     </div>

@@ -102,17 +102,6 @@ const InventoryManagement: React.FC = () => {
                   }
              }
 
-             // Ensure only one deposit is selected for non-transfer movements if your backend requires it
-             // This check might need refinement based on your backend DTO.
-             // For now, assuming one is sufficient and the backend uses the relevant one based on 'tipo'.
-             // If your backend throws an error if both origin and destination are present for non-transfers,
-             // you'll need to add more specific logic here to ensure only the relevant one is included.
-             if (!movementForm.tipo.startsWith('TRANSFERENCIA') && depositoOrigemIdInt !== undefined && depositoDestinoIdInt !== undefined) {
-                 // Optional: Add a warning or prevent submission if both are selected for non-transfers
-                 // console.warn("Both origin and destination deposits are selected for a non-transfer movement. Ensure your backend handles this correctly.");
-             }
-
-
              const movementRequest: StockMovementRequestDTO = { // Use StockMovementRequestDTO
                  tipo: movementForm.tipo as StockMovementRequestDTO['tipo'], // Use the exact backend enum name
                  jogoId: jogoIdInt,
@@ -181,8 +170,8 @@ const InventoryManagement: React.FC = () => {
 
   const tabs = [
     { id: 'overview', label: 'Visão Geral', icon: Package },
-    { id: 'movements', label: 'Itens Recentes no Estoque', icon: TrendingUp },
-    ...(isAdmin ? [{ id: 'add-movement', label: 'Adicionar Movimentação', icon: Plus }] : []),
+    { id: 'movements', label: 'Itens Recentes', icon: TrendingUp },
+    ...(isAdmin ? [{ id: 'add-movement', label: 'Adicionar', icon: Plus }] : []),
   ];
 
   if (loading) {
@@ -195,57 +184,57 @@ const InventoryManagement: React.FC = () => {
 
    if (error) {
        return (
-           <div className="text-center py-8 text-red-600">
+           <div className="text-center py-8 text-red-600 px-4">
                <p className="font-semibold">Ocorreu um erro ao carregar os dados:</p>
-               <p>{error}</p>
+               <p className="text-sm">{error}</p>
            </div>
        );
    }
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">Gerenciamento de Inventário</h2>
-        <p className="text-gray-600">Acompanhe e gerencie seu inventário de jogos</p>
+      <div className="px-4 md:px-0">
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900">Gerenciamento de Inventário</h2>
+        <p className="text-gray-600 text-sm md:text-base">Acompanhe e gerencie seu inventário de jogos</p>
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-xl shadow-sm border">
+      <div className="bg-white rounded-xl shadow-sm border mx-4 md:mx-0">
         <div className="border-b">
-          <nav className="flex space-x-8 px-6">
+          <nav className="flex space-x-4 md:space-x-8 px-4 md:px-6 overflow-x-auto">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`py-4 border-b-2 font-medium text-sm transition-colors flex items-center space-x-2 ${
+                  className={`py-3 md:py-4 border-b-2 font-medium text-sm transition-colors flex items-center space-x-2 whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'border-indigo-500 text-indigo-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
-                  <span>{tab.label}</span>
+                  <span className="hidden sm:inline">{tab.label}</span>
                 </button>
               );
             })}
           </nav>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           {activeTab === 'overview' && (
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {/* Stock Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
                 <div className="bg-emerald-50 rounded-lg p-4">
                   <div className="flex items-center">
-                    <Package className="w-8 h-8 text-emerald-600" />
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-emerald-600">Total de Itens em Estoque</p>
-                      <p className="text-2xl font-bold text-emerald-900">
+                    <Package className="w-6 h-6 md:w-8 md:h-8 text-emerald-600 flex-shrink-0" />
+                    <div className="ml-3 min-w-0">
+                      <p className="text-xs md:text-sm font-medium text-emerald-600">Total de Itens</p>
+                      <p className="text-lg md:text-2xl font-bold text-emerald-900">
                         {inventory.reduce((sum, item) => sum + item.quantidade, 0)}
                       </p>
                     </div>
@@ -254,20 +243,20 @@ const InventoryManagement: React.FC = () => {
 
                 <div className="bg-amber-50 rounded-lg p-4">
                   <div className="flex items-center">
-                    <TrendingDown className="w-8 h-8 text-amber-600" />
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-amber-600">Estoque Baixo</p>
-                      <p className="text-2xl font-bold text-amber-900">{lowStockItems.length}</p>
+                    <TrendingDown className="w-6 h-6 md:w-8 md:h-8 text-amber-600 flex-shrink-0" />
+                    <div className="ml-3 min-w-0">
+                      <p className="text-xs md:text-sm font-medium text-amber-600">Estoque Baixo</p>
+                      <p className="text-lg md:text-2xl font-bold text-amber-900">{lowStockItems.length}</p>
                     </div>
                   </div>
                 </div>
 
                 <div className="bg-blue-50 rounded-lg p-4">
                   <div className="flex items-center">
-                    <TrendingUp className="w-8 h-8 text-blue-600" />
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-blue-600">Valor Total</p>
-                      <p className="text-2xl font-bold text-blue-900">
+                    <TrendingUp className="w-6 h-6 md:w-8 md:h-8 text-blue-600 flex-shrink-0" />
+                    <div className="ml-3 min-w-0">
+                      <p className="text-xs md:text-sm font-medium text-blue-600">Valor Total</p>
+                      <p className="text-lg md:text-2xl font-bold text-blue-900">
                         R$ {inventory.reduce((sum, item) => sum + (item.precoUnitarioAtual * item.quantidade), 0).toFixed(2)}
                       </p>
                     </div>
@@ -278,19 +267,19 @@ const InventoryManagement: React.FC = () => {
               {/* Low Stock Alert */}
               {lowStockItems.length > 0 && (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-amber-900 mb-3">Alerta de Estoque Baixo</h3>
+                  <h3 className="text-base md:text-lg font-semibold text-amber-900 mb-3">Alerta de Estoque Baixo</h3>
                   <div className="space-y-2">
                     {lowStockItems.map((item) => (
                       <div key={item.id} className="flex items-center justify-between bg-white rounded-lg p-3">
-                        <div>
-                          <p className="font-medium text-gray-900">{item.jogoTitulo}</p>
-                          <p className="text-sm text-gray-600">{item.plataformaNome}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900 text-sm md:text-base truncate">{item.jogoTitulo}</p>
+                          <p className="text-xs md:text-sm text-gray-600 truncate">{item.plataformaNome}</p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium text-amber-600">
+                        <div className="text-right flex-shrink-0 ml-2">
+                          <p className="text-xs md:text-sm font-medium text-amber-600">
                             Atual: {item.quantidade}
                           </p>
-                          <p className="text-xs text-gray-500">ID Estoque: {item.id}</p>
+                          <p className="text-xs text-gray-500">ID: {item.id}</p>
                         </div>
                       </div>
                     ))}
@@ -298,11 +287,40 @@ const InventoryManagement: React.FC = () => {
                 </div>
               )}
 
-              {/* Current Stock Levels */}
+              {/* Current Stock Levels - Mobile Optimized */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Níveis de Estoque Atuais</h3>
+                <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4">Níveis de Estoque Atuais</h3>
                 <div className="bg-gray-50 rounded-lg overflow-hidden">
-                  <div className="overflow-x-auto">
+                  {/* Mobile Card View */}
+                  <div className="md:hidden space-y-2 p-2">
+                    {inventory.map((item) => (
+                      <div key={item.id} className="bg-white rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-2 flex-1 min-w-0">
+                            <div className="h-8 w-8 rounded bg-gray-200 flex items-center justify-center text-gray-400 font-bold text-xs flex-shrink-0">
+                               {item.jogoTitulo ? item.jogoTitulo.charAt(0) : '?'}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">{item.jogoTitulo || 'N/A'}</p>
+                              <p className="text-xs text-gray-600 truncate">{item.plataformaNome || 'N/A'}</p>
+                            </div>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <span className={`text-sm font-medium ${item.quantidade <= 2 ? 'text-amber-600' : 'text-gray-900'}`}>
+                              {item.quantidade}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>R$ {item.precoUnitarioAtual?.toFixed(2) || 'N/A'}</span>
+                          <span>{item.depositoNome || 'N/A'}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block overflow-x-auto">
                     <table className="w-full">
                       <thead className="bg-gray-100">
                         <tr>
@@ -348,28 +366,25 @@ const InventoryManagement: React.FC = () => {
 
           {activeTab === 'movements' && (
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Itens Recentes no Estoque</h3>
-              <div className="space-y-4">
+              <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4">Itens Recentes no Estoque</h3>
+              <div className="space-y-3 md:space-y-4">
                 {recentInventory.map((item) => (
-                  <div key={item.id} className="bg-gray-50 rounded-lg p-4">
+                  <div key={item.id} className="bg-gray-50 rounded-lg p-3 md:p-4">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                         {/* Use the getMovementIcon helper with a placeholder for now */}
-                         {/* To display the actual movement type icon, you would need
-                             to fetch movement history with type information. */}
-                         <Package className="w-4 h-4 text-indigo-500" />
-                        <div>
-                          <p className="font-medium text-gray-900">
+                      <div className="flex items-center space-x-2 md:space-x-3 flex-1 min-w-0">
+                         <Package className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-900 text-sm md:text-base truncate">
                             {item.jogoTitulo || 'N/A'}
                           </p>
-                          <p className="text-sm text-gray-600">{item.plataformaNome || 'N/A'}</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs md:text-sm text-gray-600 truncate">{item.plataformaNome || 'N/A'}</p>
+                          <p className="text-xs text-gray-500 truncate">
                             Depósito: {item.depositoNome || 'N/A'}
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium">
+                      <div className="text-right flex-shrink-0 ml-2">
+                        <p className="text-xs md:text-sm font-medium">
                           Qtd: {item.quantidade}
                         </p>
                         <p className="text-xs text-gray-500">
@@ -380,9 +395,9 @@ const InventoryManagement: React.FC = () => {
                   </div>
                 ))}
                 {recentInventory.length === 0 && (
-                  <div className="text-center py-8">
-                    <Package className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                    <p className="text-gray-500">Nenhum item recente no estoque</p>
+                  <div className="text-center py-6 md:py-8">
+                    <Package className="w-8 h-8 md:w-12 md:h-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-500 text-sm md:text-base">Nenhum item recente no estoque</p>
                   </div>
                 )}
               </div>
@@ -391,8 +406,8 @@ const InventoryManagement: React.FC = () => {
 
            {activeTab === 'add-movement' && isAdmin && (
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Adicionar Movimentação de Estoque</h3>
-              <form onSubmit={handleAddMovement} className="space-y-4 max-w-md">
+              <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4">Adicionar Movimentação de Estoque</h3>
+              <form onSubmit={handleAddMovement} className="space-y-4 max-w-md mx-auto md:mx-0">
                 <div>
                   <label htmlFor="jogoId" className="block text-sm font-medium text-gray-700 mb-2">Jogo</label>
                   <select
@@ -400,7 +415,7 @@ const InventoryManagement: React.FC = () => {
                     value={movementForm.jogoId}
                     onChange={(e) => setMovementForm(prev => ({ ...prev, jogoId: e.target.value }))}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm md:text-base"
                   >
                     <option value="">Selecione um jogo</option>
                     {games && games.length > 0 && games.map((game) => (
@@ -418,7 +433,7 @@ const InventoryManagement: React.FC = () => {
                     value={movementForm.plataformaId}
                     onChange={(e) => setMovementForm(prev => ({ ...prev, plataformaId: e.target.value }))}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm md:text-base"
                   >
                     <option value="">Selecione uma plataforma</option>
                      {platforms && platforms.length > 0 && platforms.map((plataforma) => (
@@ -440,7 +455,7 @@ const InventoryManagement: React.FC = () => {
                          depositoOrigemId: '', // Reset deposits when type changes
                          depositoDestinoId: '' // Reset deposits when type changes
                     }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm md:text-base"
                   >
                     <option value="ENTRADA">Entrada de Estoque</option>
                     <option value="SAIDA">Saída de Estoque</option>
@@ -460,7 +475,7 @@ const InventoryManagement: React.FC = () => {
                     value={movementForm.quantidade}
                     onChange={(e) => setMovementForm(prev => ({ ...prev, quantidade: parseInt(e.target.value) }))}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm md:text-base"
                   />
                 </div>
 
@@ -474,7 +489,7 @@ const InventoryManagement: React.FC = () => {
                          value={movementForm.depositoOrigemId}
                          onChange={(e) => setMovementForm(prev => ({ ...prev, depositoOrigemId: e.target.value }))}
                          required={movementForm.tipo === 'SAIDA' || movementForm.tipo === 'AJUSTE_NEGATIVO' || movementForm.tipo.startsWith('TRANSFERENCIA')} // Required for these types
-                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                         className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm md:text-base"
                        >
                          <option value="">Selecione o depósito de origem</option>
                          {deposits && deposits.length > 0 && deposits.map((deposito) => (
@@ -495,7 +510,7 @@ const InventoryManagement: React.FC = () => {
                          value={movementForm.depositoDestinoId}
                          onChange={(e) => setMovementForm(prev => ({ ...prev, depositoDestinoId: e.target.value }))}
                          required={movementForm.tipo === 'ENTRADA' || movementForm.tipo === 'AJUSTE_POSITIVO' || movementForm.tipo.startsWith('TRANSFERENCIA')} // Required for these types
-                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                         className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm md:text-base"
                        >
                          <option value="">Selecione o depósito de destino</option>
                          {deposits && deposits.length > 0 && deposits.map((deposito) => (
@@ -515,14 +530,14 @@ const InventoryManagement: React.FC = () => {
                     type="text"
                     value={movementForm.observacao}
                     onChange={(e) => setMovementForm(prev => ({ ...prev, observacao: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm md:text-base"
                     placeholder="ex: Compra, Venda, Dano, etc."
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors"
+                  className="w-full bg-indigo-600 text-white py-2 md:py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors text-sm md:text-base"
                 >
                   Adicionar Movimentação
                 </button>

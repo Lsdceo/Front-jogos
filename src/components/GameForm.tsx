@@ -62,11 +62,11 @@ const GameForm: React.FC<GameFormProps> = ({ game, onClose }) => {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto px-4">
       <div className="bg-white rounded-xl shadow-sm border">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-2xl font-bold text-gray-900">
+        <div className="flex items-center justify-between p-4 md:p-6 border-b">
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900">
             {game ? 'Editar Jogo' : 'Adicionar Novo Jogo'}
           </h2>
           <button
@@ -78,8 +78,8 @@ const GameForm: React.FC<GameFormProps> = ({ game, onClose }) => {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-4 md:space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {/* Left Column */}
             <div className="space-y-4">
               <div>
@@ -92,7 +92,7 @@ const GameForm: React.FC<GameFormProps> = ({ game, onClose }) => {
                   value={formData.titulo}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm md:text-base"
                   placeholder="Digite o título do jogo"
                 />
               </div>
@@ -107,7 +107,7 @@ const GameForm: React.FC<GameFormProps> = ({ game, onClose }) => {
                   value={formData.genero}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm md:text-base"
                   placeholder="ex: Ação, RPG, Esportes"
                 />
               </div>
@@ -124,7 +124,7 @@ const GameForm: React.FC<GameFormProps> = ({ game, onClose }) => {
                   min="0"
                   step="0.01"
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm md:text-base"
                   placeholder="0,00"
                 />
               </div>
@@ -142,7 +142,7 @@ const GameForm: React.FC<GameFormProps> = ({ game, onClose }) => {
                   value={formData.desenvolvedora}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm md:text-base"
                   placeholder="ex: Naughty Dog, Nintendo"
                 />
               </div>
@@ -157,7 +157,7 @@ const GameForm: React.FC<GameFormProps> = ({ game, onClose }) => {
                   value={formData.publicadora}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm md:text-base"
                   placeholder="ex: Sony, Nintendo"
                 />
               </div>
@@ -171,7 +171,7 @@ const GameForm: React.FC<GameFormProps> = ({ game, onClose }) => {
                   value={formData.descricao}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm md:text-base"
                   placeholder="Sobre o jogo, observações..."
                 />
               </div>
@@ -183,7 +183,7 @@ const GameForm: React.FC<GameFormProps> = ({ game, onClose }) => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Imagem do Jogo
             </label>
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-4">
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 md:gap-3 mb-4">
               {predefinedImages.map((url, index) => (
                 <button
                   key={index}
@@ -195,7 +195,7 @@ const GameForm: React.FC<GameFormProps> = ({ game, onClose }) => {
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <img src={url} alt={`Opção ${index + 1}`} className="w-full h-16 object-cover" />
+                  <img src={url} alt={`Opção ${index + 1}`} className="w-full h-12 md:h-16 object-cover" />
                 </button>
               ))}
             </div>
@@ -205,7 +205,7 @@ const GameForm: React.FC<GameFormProps> = ({ game, onClose }) => {
               name="urlImagemCapa"
               value={formData.urlImagemCapa}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm md:text-base"
               placeholder="Ou digite uma URL de imagem personalizada"
             />
           </div>
@@ -219,24 +219,24 @@ const GameForm: React.FC<GameFormProps> = ({ game, onClose }) => {
               <img
                 src={formData.urlImagemCapa}
                 alt="Visualização"
-                className="w-32 h-32 object-cover rounded-lg border"
+                className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-lg border mx-auto md:mx-0"
               />
             </div>
           )}
 
           {/* Submit Buttons */}
-          <div className="flex justify-end space-x-4 pt-6 border-t">
+          <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 pt-4 md:pt-6 border-t">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 md:px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm md:text-base"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
+              className="px-4 md:px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2 text-sm md:text-base"
             >
               {loading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
